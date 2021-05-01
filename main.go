@@ -9,6 +9,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -25,29 +26,43 @@ const (
 
 var (
 	pixels      [imageWidth][imageHeight]uint8
-	parallelism uint
+	parallelism int
 )
 
 func main() {
-	flag.UintVar(&parallelism, "parallelism", 1, "")
+	flag.IntVar(&parallelism, "parallelism", 1, "")
 	flag.Parse()
 	log.Printf("Starting with parallelism %d\n", parallelism)
 
+	var wg sync.WaitGroup
+	wg.Add(parallelism)
+
 	startTime := time.Now()
-	calculateMandelbrotSet()
+	for i := 1; i <= parallelism-1; i++ {
+		go calculateMandelbrotSetFragment(&wg, i)
+	}
+	calculateMandelbrotSetFragment(&wg, 0)
+
+	log.Println("Waiting for workers to finish execution...")
+	wg.Wait()
 	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
 	render()
 	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
 }
 
-func calculateMandelbrotSet() {
-	for x := 0; x < imageWidth; x++ {
+func calculateMandelbrotSetFragment(wg *sync.WaitGroup, i int) {
+	// Each goroutine takes i-th, parallelism+i-th, 2*parallelism+i-th, ... row
+	log.Printf("Starting worker %d\n", i)
+	startTime := time.Now()
+	for x := i; x < imageWidth; x += parallelism {
 		for y := 0; y < imageHeight; y++ {
 			cx := startX + (endX-startX)*float64(x)/float64(imageWidth-1)
 			cy := startY + (endY-startY)*float64(y)/float64(imageHeight-1)
 			pixels[x][y] = calculateColour(cx, cy)
 		}
 	}
+	log.Printf("Worker %d finished after %d milliseconds\n", i, time.Now().Sub(startTime).Milliseconds())
+	wg.Done()
 }
 
 func calculateColour(cx, cy float64) uint8 {
