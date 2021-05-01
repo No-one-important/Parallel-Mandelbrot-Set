@@ -18,10 +18,10 @@ const (
 	imageHeight   = 4096
 	maxIterations = 256
 
-	startX = -1.4
-	startY = -0.8
-	endX   = 0.4
-	endY   = 0.8
+	startX = -0.8
+	startY = 0.145
+	endX   = -0.79
+	endY   = 0.155
 )
 
 var (
