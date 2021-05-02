@@ -14,23 +14,28 @@ import (
 )
 
 const (
-	imageWidth    = 4096
-	imageHeight   = 4096
+	imageWidth    = 15000
+	imageHeight   = 9000
 	maxIterations = 256
-
-	startX = -0.8
-	startY = 0.145
-	endX   = -0.79
-	endY   = 0.155
 )
 
 var (
 	pixels      [imageWidth][imageHeight]uint8
 	parallelism int
+
+	startX float64
+	startY float64
+	endX   float64
+	endY   float64
 )
 
 func main() {
 	flag.IntVar(&parallelism, "parallelism", 1, "")
+	flag.Float64Var(&startX, "startX", 		-0.87, "")
+	flag.Float64Var(&startY, "startY", 	-0.215, "")
+	flag.Float64Var(&endX, "endX", -0.814, "")
+	flag.Float64Var(&endY, "endY", -0.1976, "")
+
 	flag.Parse()
 	log.Printf("Starting with parallelism %d\n", parallelism)
 
@@ -94,6 +99,11 @@ func render() {
 		}
 	}
 
-	output, _ := os.Create("result.jpg")
-	_ = jpeg.Encode(output, img, &jpeg.Options{Quality: 100})
+	output, err := os.Create("result.jpg")
+	if err != nil {
+		log.Fatalf("Could not create result.jpg. Reason: %s\n", err.Error())
+	}
+	if err = jpeg.Encode(output, img, &jpeg.Options{Quality: 100}); err != nil {
+		log.Fatalf("Could not construct the result fractal. Reason: %s\n", err.Error())
+	}
 }
