@@ -27,18 +27,20 @@ var (
 	startY float64
 	endX   float64
 	endY   float64
+
+	threadTimeSpent []int64
 )
 
 func main() {
 	flag.IntVar(&parallelism, "parallelism", 1, "")
-	flag.Float64Var(&startX, "startX", 		-0.87, "")
-	flag.Float64Var(&startY, "startY", 	-0.215, "")
+	flag.Float64Var(&startX, "startX", -0.87, "")
+	flag.Float64Var(&startY, "startY", -0.215, "")
 	flag.Float64Var(&endX, "endX", -0.814, "")
 	flag.Float64Var(&endY, "endY", -0.1976, "")
 
 	flag.Parse()
 	log.Printf("Starting with parallelism %d\n", parallelism)
-
+	threadTimeSpent = make([]int64, parallelism)
 	var wg sync.WaitGroup
 	wg.Add(parallelism)
 
@@ -47,10 +49,12 @@ func main() {
 		go calculateMandelbrotSetFragment(&wg, i)
 	}
 	calculateMandelbrotSetFragment(&wg, 0)
+	threadTimeSpent[0] = time.Now().Sub(startTime).Milliseconds()
 
 	log.Println("Waiting for workers to finish execution...")
 	wg.Wait()
 	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
+	log.Printf("Elapsed time for all threads: %+v\n", threadTimeSpent)
 	render()
 	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
 }
@@ -66,7 +70,8 @@ func calculateMandelbrotSetFragment(wg *sync.WaitGroup, i int) {
 			pixels[x][y] = calculateColour(cx, cy)
 		}
 	}
-	log.Printf("Worker %d finished after %d milliseconds\n", i, time.Now().Sub(startTime).Milliseconds())
+	threadTimeSpent[i] = time.Now().Sub(startTime).Milliseconds()
+	log.Printf("Worker %d finished after %d milliseconds\n", i, threadTimeSpent[i])
 	wg.Done()
 }
 
