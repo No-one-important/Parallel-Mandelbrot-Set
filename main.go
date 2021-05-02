@@ -1,6 +1,5 @@
 package main
 
-//https://github.com/esimov/gobrot/blob/b383d69bb3e19484e38cfb8785684dade6862c7f/mandelbrot.go#L149
 import (
 	"flag"
 	"image"
@@ -9,6 +8,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -29,26 +29,19 @@ var (
 	endY   float64
 
 	threadTimeSpent []int64
+	wg sync.WaitGroup
 )
 
 func main() {
-	flag.IntVar(&parallelism, "parallelism", 1, "")
-	flag.Float64Var(&startX, "startX", -0.87, "")
-	flag.Float64Var(&startY, "startY", -0.215, "")
-	flag.Float64Var(&endX, "endX", -0.814, "")
-	flag.Float64Var(&endY, "endY", -0.1976, "")
-
-	flag.Parse()
-	log.Printf("Starting with parallelism %d\n", parallelism)
+	parseConfig()
 	threadTimeSpent = make([]int64, parallelism)
-	var wg sync.WaitGroup
 	wg.Add(parallelism)
 
 	startTime := time.Now()
 	for i := 1; i <= parallelism-1; i++ {
-		go calculateMandelbrotSetFragment(&wg, i)
+		go calculateMandelbrotSetFragment(i)
 	}
-	calculateMandelbrotSetFragment(&wg, 0)
+	calculateMandelbrotSetFragment(0)
 	threadTimeSpent[0] = time.Now().Sub(startTime).Milliseconds()
 
 	log.Println("Waiting for workers to finish execution...")
@@ -59,7 +52,7 @@ func main() {
 	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
 }
 
-func calculateMandelbrotSetFragment(wg *sync.WaitGroup, i int) {
+func calculateMandelbrotSetFragment(i int) {
 	// Each goroutine takes i-th, parallelism+i-th, 2*parallelism+i-th, ... row
 	log.Printf("Starting worker %d\n", i)
 	startTime := time.Now()
@@ -111,4 +104,15 @@ func render() {
 	if err = jpeg.Encode(output, img, &jpeg.Options{Quality: 100}); err != nil {
 		log.Fatalf("Could not construct the result fractal. Reason: %s\n", err.Error())
 	}
+}
+
+func parseConfig() {
+	parallelism = runtime.GOMAXPROCS(0)
+	flag.Float64Var(&startX, "startX", -0.87, "")
+	flag.Float64Var(&startY, "startY", -0.215, "")
+	flag.Float64Var(&endX, "endX", -0.814, "")
+	flag.Float64Var(&endY, "endY", -0.1976, "")
+
+	flag.Parse()
+	log.Printf("Starting with parallelism %d\n", parallelism)
 }
