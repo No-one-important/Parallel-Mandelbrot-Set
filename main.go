@@ -17,11 +17,16 @@ const (
 	imageWidth    = 15000
 	imageHeight   = 9000
 	maxIterations = 256
+
+	coarseGranularity = "COARSE"
+	mediumGranularity = "MEDIUM"
+	fineGranularity   = "ROWS"
 )
 
 var (
 	pixels      [imageWidth][imageHeight]uint8
 	parallelism int
+	granularity string
 
 	startX float64
 	startY float64
@@ -29,7 +34,7 @@ var (
 	endY   float64
 
 	threadTimeSpent []int64
-	wg sync.WaitGroup
+	wg              sync.WaitGroup
 )
 
 func main() {
@@ -39,7 +44,16 @@ func main() {
 
 	startTime := time.Now()
 	for i := 1; i <= parallelism-1; i++ {
-		go calculateMandelbrotSetFragment(i)
+		switch granularity {
+		case fineGranularity:
+			go calculateMandelbrotSetFragment(i)
+		case mediumGranularity:
+			go calculateMandelbrotSetRectangles(i)
+		case coarseGranularity:
+			go calculateMandelbrotSetRectangles(i)
+		default:
+			log.Fatalf("Invalid granularity setting %s\n", granularity)
+		}
 	}
 	calculateMandelbrotSetFragment(0)
 	threadTimeSpent[0] = time.Now().Sub(startTime).Milliseconds()
@@ -54,7 +68,7 @@ func main() {
 
 func calculateMandelbrotSetFragment(i int) {
 	// Each goroutine takes i-th, parallelism+i-th, 2*parallelism+i-th, ... row
-	log.Printf("Starting worker %d\n", i)
+	log.Printf("Starting thread %d\n", i)
 	startTime := time.Now()
 	for x := i; x < imageWidth; x += parallelism {
 		for y := 0; y < imageHeight; y++ {
@@ -64,7 +78,25 @@ func calculateMandelbrotSetFragment(i int) {
 		}
 	}
 	threadTimeSpent[i] = time.Now().Sub(startTime).Milliseconds()
-	log.Printf("Worker %d finished after %d milliseconds\n", i, threadTimeSpent[i])
+	log.Printf("Thread %d finished after %d milliseconds\n", i, threadTimeSpent[i])
+	wg.Done()
+}
+
+func calculateMandelbrotSetRectangles(i int) {
+	// Each goroutine takes a rectangular segment of the whole image
+	log.Printf("Starting thread %d\n", i)
+	startTime := time.Now()
+
+	for x := i*imageWidth/parallelism; x < (i+1)*imageWidth/parallelism; x++ {
+		for y := 0; y < imageHeight; y++ {
+			cx := startX + (endX-startX)*float64(x)/float64(imageWidth-1)
+			cy := startY + (endY-startY)*float64(y)/float64(imageHeight-1)
+			pixels[x][y] = calculateColour(cx, cy)
+		}
+	}
+
+	threadTimeSpent[i] = time.Now().Sub(startTime).Milliseconds()
+	log.Printf("Thread %d finished after %d milliseconds\n", i, threadTimeSpent[i])
 	wg.Done()
 }
 
@@ -112,6 +144,8 @@ func parseConfig() {
 	flag.Float64Var(&startY, "startY", -0.215, "")
 	flag.Float64Var(&endX, "endX", -0.814, "")
 	flag.Float64Var(&endY, "endY", -0.1976, "")
+
+	flag.StringVar(&granularity, "g", "FINE", "")
 
 	flag.Parse()
 	log.Printf("Starting with parallelism %d\n", parallelism)
