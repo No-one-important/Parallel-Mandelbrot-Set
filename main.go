@@ -76,7 +76,7 @@ func calculateColour(cx, cy float64) uint8 {
 		xx = x * x
 		yy = y * y
 		if xx+yy > 4 {
-			return uint8(math.MaxUint8 - i)
+			return uint8(i)
 		}
 		x = xx - yy + cx
 		y = 2*xy + cy
@@ -90,8 +90,8 @@ func render() {
 		for y := 0; y < imageHeight; y++ {
 			img.Set(x, y, color.RGBA{
 				R: 0,
-				G: pixels[x][y],
-				B: 0,
+				G: 0,
+				B: pixels[x][y],
 				A: math.MaxUint8,
 			})
 		}
