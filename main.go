@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"log"
 	"math"
+	"math/rand"
 	"runtime"
 	"sync"
 	"time"
@@ -20,7 +21,9 @@ const (
 )
 
 var (
-	pixels      [imageWidth][imageHeight]uint8
+	pixels           [imageWidth][imageHeight]uint8
+	taskDistribution = rand.Perm(imageWidth) // Only used for random partitioning (g=0)
+
 	parallelism int
 	granularity int
 
@@ -42,23 +45,29 @@ func main() {
 
 	startTime := time.Now()
 	for i := 1; i <= parallelism-1; i++ {
-		go calculateMandelbrotSetFragment(i)
+		startThread(i)
 	}
-	calculateMandelbrotSetFragment(0)
+	startThread(0)
 	threadTimeSpent[0] = time.Now().Sub(startTime).Milliseconds()
 
-	log.Println("Waiting for workers to finish execution...")
 	wg.Wait()
 	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
-	log.Printf("Elapsed time for all threads: %+v\n", threadTimeSpent)
+	log.Printf("Elapsed time for all threads: %+v.\n", threadTimeSpent)
 	renderMandelbrotSet()
 	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
 	//rendering.ExportAsJPG(rendering.GraphThreadSegments(parallelism, granularity, imageWidth, imageHeight), "threads")
 }
 
+func startThread(i int) {
+	if granularity == 0 {
+		go calculateMandelbrotSetFragmentRandomDist(i)
+	} else {
+		go calculateMandelbrotSetFragment(i)
+	}
+}
+
 func calculateMandelbrotSetFragment(i int) {
 	// Each goroutine takes a rectangular segment of the whole image
-	log.Printf("Starting thread %d\n", i)
 	startTime := time.Now()
 
 	taskSize := imageWidth / granularity / parallelism
@@ -80,7 +89,22 @@ func calculateMandelbrotSetFragment(i int) {
 	}
 
 	threadTimeSpent[i] = time.Now().Sub(startTime).Milliseconds()
-	log.Printf("Thread %d finished after %d milliseconds\n", i, threadTimeSpent[i])
+	wg.Done()
+}
+
+func calculateMandelbrotSetFragmentRandomDist(i int) {
+	startTime := time.Now()
+
+	for rowIndex := i * (imageWidth / parallelism); rowIndex < (i+1)*(imageWidth/parallelism); rowIndex++ {
+		x := taskDistribution[rowIndex]
+		for y := 0; y < imageHeight; y++ {
+			cx := startX + (endX-startX)*float64(x)/float64(imageWidth-1)
+			cy := startY + (endY-startY)*float64(y)/float64(imageHeight-1)
+			pixels[x][y] = calculateColour(cx, cy)
+		}
+	}
+
+	threadTimeSpent[i] = time.Now().Sub(startTime).Milliseconds()
 	wg.Done()
 }
 
@@ -118,12 +142,10 @@ func renderMandelbrotSet() {
 
 func parseConfig() {
 	parallelism = runtime.GOMAXPROCS(0)
-	flag.Float64Var(&startX, "startX", -0.87, "")
-	flag.Float64Var(&startY, "startY", -0.215, "")
-	flag.Float64Var(&endX, "endX", -0.814, "")
-	flag.Float64Var(&endY, "endY", -0.1976, "")
-
-	flag.IntVar(&granularity, "g", 1, "")
-
+	flag.Float64Var(&startX, "startX", -0.87, "Starting X coordinates")
+	flag.Float64Var(&startY, "startY", -0.215, "Starting Y coordinates")
+	flag.Float64Var(&endX, "endX", -0.814, "Ending X coordinates")
+	flag.Float64Var(&endY, "endY", -0.1976, "Ending Y coordinates")
+	flag.IntVar(&granularity, "g", 1, "Granularity(>=0), if 0 then random partitioning is used")
 	flag.Parse()
 }
