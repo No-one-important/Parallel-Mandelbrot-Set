@@ -4,13 +4,13 @@ import (
 	"flag"
 	"image"
 	"image/color"
-	"image/jpeg"
 	"log"
 	"math"
-	"os"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/Borislav-K/Parallel-Mandelbrot-Set/rendering"
 )
 
 const (
@@ -35,6 +35,8 @@ var (
 
 func main() {
 	parseConfig()
+	log.Printf("Starting with parallelism %d and granularity %d\n", parallelism, granularity)
+
 	threadTimeSpent = make([]int64, parallelism)
 	wg.Add(parallelism)
 
@@ -49,8 +51,9 @@ func main() {
 	wg.Wait()
 	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
 	log.Printf("Elapsed time for all threads: %+v\n", threadTimeSpent)
-	render()
+	renderMandelbrotSet()
 	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
+	//rendering.ExportAsJPG(rendering.GraphThreadSegments(parallelism, granularity, imageWidth, imageHeight), "threads")
 }
 
 func calculateMandelbrotSetFragment(i int) {
@@ -97,7 +100,7 @@ func calculateColour(cx, cy float64) uint8 {
 	return 0
 }
 
-func render() {
+func renderMandelbrotSet() {
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	for x := 0; x < imageWidth; x++ {
 		for y := 0; y < imageHeight; y++ {
@@ -110,13 +113,7 @@ func render() {
 		}
 	}
 
-	output, err := os.Create("result.jpg")
-	if err != nil {
-		log.Fatalf("Could not create result.jpg. Reason: %s\n", err.Error())
-	}
-	if err = jpeg.Encode(output, img, &jpeg.Options{Quality: 100}); err != nil {
-		log.Fatalf("Could not construct the result fractal. Reason: %s\n", err.Error())
-	}
+	rendering.ExportAsJPG(img, "result")
 }
 
 func parseConfig() {
@@ -129,5 +126,4 @@ func parseConfig() {
 	flag.IntVar(&granularity, "g", 1, "")
 
 	flag.Parse()
-	log.Printf("Starting with parallelism %d\n", parallelism)
 }
