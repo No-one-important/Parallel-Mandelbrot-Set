@@ -60,7 +60,7 @@ func main() {
 
 func startThread(i int) {
 	if granularity == 0 {
-		go calculateMandelbrotSetFragmentRandomDist(i)
+		go calculateMandelbrotSetFragmentAlternating(i)
 	} else {
 		go calculateMandelbrotSetFragment(i)
 	}
@@ -92,19 +92,18 @@ func calculateMandelbrotSetFragment(i int) {
 	wg.Done()
 }
 
-func calculateMandelbrotSetFragmentRandomDist(i int) {
+func calculateMandelbrotSetFragmentAlternating(i int) {
+	// Each goroutine takes i-th, parallelism+i-th, 2*parallelism+i-th, ... row
+	log.Printf("Starting worker %d\n", i)
 	startTime := time.Now()
-
-	for rowIndex := i * (imageWidth / parallelism); rowIndex < (i+1)*(imageWidth/parallelism); rowIndex++ {
-		x := taskDistribution[rowIndex]
+	for x := i; x < imageWidth; x += parallelism {
 		for y := 0; y < imageHeight; y++ {
 			cx := startX + (endX-startX)*float64(x)/float64(imageWidth-1)
 			cy := startY + (endY-startY)*float64(y)/float64(imageHeight-1)
 			pixels[x][y] = calculateColour(cx, cy)
 		}
 	}
-
-	threadTimeSpent[i] = time.Now().Sub(startTime).Milliseconds()
+	log.Printf("Worker %d finished after %d milliseconds\n", i, time.Now().Sub(startTime).Milliseconds())
 	wg.Done()
 }
 
