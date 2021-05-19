@@ -6,8 +6,6 @@ import (
 	"image/color"
 	"log"
 	"math"
-	"math/rand"
-	"runtime"
 	"sync"
 	"time"
 
@@ -22,7 +20,6 @@ const (
 
 var (
 	pixels           [imageWidth][imageHeight]uint8
-	taskDistribution = rand.Perm(imageWidth) // Only used for random partitioning (g=0)
 
 	parallelism int
 	granularity int
@@ -55,7 +52,6 @@ func main() {
 	log.Printf("Elapsed time for all threads: %+v.\n", threadTimeSpent)
 	renderMandelbrotSet()
 	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
-	//rendering.ExportAsJPG(rendering.GraphThreadSegments(parallelism, granularity, imageWidth, imageHeight), "threads")
 }
 
 func startThread(i int) {
@@ -140,11 +136,11 @@ func renderMandelbrotSet() {
 }
 
 func parseConfig() {
-	parallelism = runtime.GOMAXPROCS(0)
 	flag.Float64Var(&startX, "startX", -0.87, "Starting X coordinates")
 	flag.Float64Var(&startY, "startY", -0.215, "Starting Y coordinates")
 	flag.Float64Var(&endX, "endX", -0.814, "Ending X coordinates")
 	flag.Float64Var(&endY, "endY", -0.1976, "Ending Y coordinates")
-	flag.IntVar(&granularity, "g", 1, "Granularity(>=0), if 0 then random partitioning is used")
+	flag.IntVar(&granularity, "g", 1, "Granularity(>=0), if 0 then alternating partitioning is used")
+	flag.IntVar(&parallelism, "p", 1, "Parallelism(>=1)")
 	flag.Parse()
 }
