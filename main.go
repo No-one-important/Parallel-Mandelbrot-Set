@@ -42,10 +42,9 @@ func main() {
 
 	startTime := time.Now()
 	for i := 1; i <= parallelism-1; i++ {
-		startThread(i)
+		go startThread(i)
 	}
 	startThread(0)
-	threadTimeSpent[0] = time.Now().Sub(startTime).Milliseconds()
 
 	wg.Wait()
 	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
@@ -56,9 +55,9 @@ func main() {
 
 func startThread(i int) {
 	if granularity == 0 {
-		go calculateMandelbrotSetFragmentAlternating(i)
+		calculateMandelbrotSetFragmentAlternating(i)
 	} else {
-		go calculateMandelbrotSetFragment(i)
+		calculateMandelbrotSetFragment(i)
 	}
 }
 
