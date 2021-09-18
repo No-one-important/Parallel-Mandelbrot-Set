@@ -1,7 +1,10 @@
 # Parallel-Mandelbrot-Set
 A parallel implementation of the Mandlebrot Set construction
 
-The analysis of speedup can be found at docs/, but it is in Bulgarian only <br>
+The analysis of speedup can be found at the `docs/` directory, but it is in Bulgarian language only <br>
+## Prerequisites
+A Golang version compatible with `1.15`
+
 ## How to run
 `go run main.go -g=<granularity> -p=<parallelism>`, where p is the amount of goroutines that will be started by the
 program and g is the number of tasks per thread. 
