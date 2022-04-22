@@ -130,7 +130,7 @@ func renderMandelbrotSet() {
 		}
 	}
 
-	rendering.ExportAsJPG(img, "result")
+	rendering.Export(img, "result")
 }
 
 func parseConfig() {

@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func ExportAsJPG(img *image.RGBA, filename string) {
+func Export(img *image.RGBA, filename string) {
 	output, err := os.Create(fmt.Sprintf("%s.png", filename))
 	if err != nil {
 		log.Fatalf("Could not create result.png. Reason: %s\n", err.Error())
