@@ -22,4 +22,4 @@ program and g is the number of tasks per thread.
 
 ## An example result from the execution of the program (15000x9000 pixels)
 
-![Example mandelbrot set fragment](https://github.com/Borislav-K/Parallel-Mandelbrot-Set/blob/main/result.jpg?raw=true)
+![Example mandelbrot set fragment](https://github.com/No-one-important/Parallel-Mandelbrot-Set/blob/main/result.png?raw=true)
