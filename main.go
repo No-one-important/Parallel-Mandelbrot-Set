@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Borislav-K/Parallel-Mandelbrot-Set/rendering"
+	"github.com/No-one-important/Parallel-Mandelbrot-Set/rendering"
 )
 
 const (
