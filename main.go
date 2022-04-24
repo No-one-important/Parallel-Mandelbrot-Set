@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	pixels           [imageWidth][imageHeight]uint8
+	pixels [imageWidth][imageHeight]uint8
 
 	parallelism int
 	granularity int
