@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// Export exports an image as [filename].png.
 func Export(img *image.RGBA, filename string) {
 	output, err := os.Create(fmt.Sprintf("%s.png", filename))
 	if err != nil {
