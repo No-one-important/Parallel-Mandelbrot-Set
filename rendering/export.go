@@ -1,7 +1,6 @@
 package rendering
 
 import (
-	"fmt"
 	"image"
 	"image/png"
 	"log"
@@ -10,7 +9,7 @@ import (
 
 // Export exports an image as [filename].png.
 func Export(img *image.RGBA, filename string) {
-	output, err := os.Create(fmt.Sprintf("%s.png", filename))
+	output, err := os.Create(filename + ".png")
 	if err != nil {
 		log.Fatalf("Could not create result.png. Reason: %s\n", err.Error())
 	}
