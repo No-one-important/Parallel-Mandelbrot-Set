@@ -47,10 +47,10 @@ func main() {
 	startThread(0)
 
 	wg.Wait()
-	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
+	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (ms)\n", time.Now().Sub(startTime).Milliseconds())
 	log.Printf("Elapsed time for all threads: %+v.\n", threadTimeSpent)
 	renderMandelbrotSet()
-	log.Printf("Done rendering the picture. Time elapsed (total): %d (millis)\n", time.Now().Sub(startTime).Milliseconds())
+	log.Printf("Done rendering the picture. Time elapsed (total): %d (ms)\n", time.Now().Sub(startTime).Milliseconds())
 }
 
 func startThread(i int) {
@@ -108,7 +108,7 @@ func calculateColour(cx, cy float64) uint8 {
 		xy := x * y
 		xx = x * x
 		yy = y * y
-		if xx+yy > 4 {
+		if xx+yy > 2 {
 			return uint8(i)
 		}
 		x = xx - yy + cx
