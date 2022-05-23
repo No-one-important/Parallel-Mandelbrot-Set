@@ -47,10 +47,10 @@ func main() {
 	startThread(0)
 
 	wg.Wait()
-	log.Printf("Done calculating Mandelbrot set. Time elapsed: %d (ms)\n", time.Now().Sub(startTime).Milliseconds())
+	log.Printf("Done calculating Mandelbrot set. Time elapsed: %vms\n", time.Now().Sub(startTime).Milliseconds())
 	log.Printf("Elapsed time for all threads: %+v.\n", threadTimeSpent)
 	renderMandelbrotSet()
-	log.Printf("Done rendering the picture. Time elapsed (total): %d (ms)\n", time.Now().Sub(startTime).Milliseconds())
+	log.Printf("Done rendering the picture. Time elapsed (total): %vms\n", time.Now().Sub(startTime).Milliseconds())
 }
 
 func startThread(i int) {
